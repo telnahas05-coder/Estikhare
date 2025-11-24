@@ -1,10 +1,12 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { IstikharaResponse, IstikharaResultType } from "../types";
 
+// In Vite applications, we must use import.meta.env to access environment variables.
+// The variable MUST start with VITE_ to be exposed to the browser.
 const apiKey = import.meta.env.VITE_API_KEY;
 
 if (!apiKey) {
-  console.error("API Key is missing. Please set process.env.API_KEY");
+  console.error("CRITICAL ERROR: API Key is missing. Please ensure 'VITE_API_KEY' is set in your .env file or Netlify Environment Variables.");
 }
 
 const ai = new GoogleGenAI({ apiKey: apiKey || '' });
@@ -31,7 +33,6 @@ const istikharaSchema: Schema = {
 export const performIstikhara = async (userIntention: string): Promise<IstikharaResponse> => {
   // We simulate the randomness of opening the Quran by asking the AI to pick a random page/verse conceptually, 
   // but heavily influenced by the nature of Istikhara (guidance).
-  // Note: In a pure theological sense, physical randomness is often preferred, but here we use AI as the medium for selection and interpretation.
   
   const prompt = `
     You are a wise and spiritual Islamic scholar providing an 'Istikhara' (guidance seeking) service.
@@ -50,6 +51,11 @@ export const performIstikhara = async (userIntention: string): Promise<Istikhara
   `;
 
   try {
+    // Check if API key is present before making the call
+    if (!apiKey) {
+      throw new Error("API Key is not configured correctly.");
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
@@ -66,16 +72,22 @@ export const performIstikhara = async (userIntention: string): Promise<Istikhara
     const data = JSON.parse(resultText) as IstikharaResponse;
     return data;
   } catch (error) {
-    console.error("Istikhara Service Error:", error);
-    // Fallback in case of total failure (rare with correct config)
+    console.error("Istikhara Service Error Details:", error);
+    
+    // Detailed error logging to help debugging in browser console
+    if (error instanceof Error) {
+        console.error("Error Message:", error.message);
+    }
+
+    // Fallback in case of total failure
     return {
       surahName: "الفتح",
       verseNumber: 1,
       arabicText: "إِنَّا فَتَحْنَا لَكَ فَتْحًا مُبِينًا",
       persianTranslation: "ما تو را پیروزی بخشیدیم، چه پیروزی درخشانی!",
       resultType: IstikharaResultType.GOOD,
-      briefResult: "بسیار خوب است",
-      interpretation: "این کار با موفقیت و گشایش همراه خواهد بود. توکل بر خدا کنید و اقدام نمایید.",
+      briefResult: "خطا در ارتباط",
+      interpretation: "متاسفانه ارتباط با هوش مصنوعی برقرار نشد. لطفا بررسی کنید که کلید API (VITE_API_KEY) به درستی در تنظیمات Netlify وارد شده باشد.",
     };
   }
 };
