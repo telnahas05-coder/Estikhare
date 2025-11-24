@@ -9,9 +9,6 @@ const App: React.FC = () => {
   const [intention, setIntention] = useState<string>('');
   const [result, setResult] = useState<IstikharaResponse | null>(null);
   
-  // Audio ref for effect (optional silent conceptual placeholder)
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
   const handleStart = () => {
     setViewState('INTENTION');
   };
@@ -27,7 +24,6 @@ const App: React.FC = () => {
       }, 1500);
     } catch (e) {
       console.error(e);
-      // Return to landing on critical error
       setViewState('LANDING');
       alert("خطایی در ارتباط رخ داد. لطفا دوباره تلاش کنید.");
     }
@@ -45,6 +41,7 @@ const App: React.FC = () => {
       case IstikharaResultType.GOOD: return 'text-green-700';
       case IstikharaResultType.BAD: return 'text-red-700';
       case IstikharaResultType.MODERATE: return 'text-amber-600';
+      case IstikharaResultType.ERROR: return 'text-gray-600';
       default: return 'text-islamic-base';
     }
   };
@@ -54,6 +51,7 @@ const App: React.FC = () => {
         case IstikharaResultType.GOOD: return 'bg-green-100 border-green-300';
         case IstikharaResultType.BAD: return 'bg-red-100 border-red-300';
         case IstikharaResultType.MODERATE: return 'bg-amber-100 border-amber-300';
+        case IstikharaResultType.ERROR: return 'bg-gray-200 border-gray-400';
         default: return 'bg-gray-100';
       }
   }
@@ -167,9 +165,11 @@ const App: React.FC = () => {
                    <div className="font-quran text-3xl md:text-4xl text-islamic-dark leading-loose mb-4 px-2" dir="rtl">
                      {result.arabicText}
                    </div>
-                   <p className="text-islamic-base font-quran text-lg flex items-center justify-center gap-2 opacity-80">
-                     <span>﴿سوره {result.surahName} - آیه {result.verseNumber}﴾</span>
-                   </p>
+                   {result.resultType !== IstikharaResultType.ERROR && (
+                       <p className="text-islamic-base font-quran text-lg flex items-center justify-center gap-2 opacity-80">
+                         <span>﴿سوره {result.surahName} - آیه {result.verseNumber}﴾</span>
+                       </p>
+                   )}
                 </div>
 
                 {/* Translation */}
@@ -181,8 +181,10 @@ const App: React.FC = () => {
 
                 {/* Interpretation */}
                 <div className="text-right space-y-2">
-                  <h4 className="font-bold text-islamic-base border-b border-gray-200 pb-2 mb-2">تفسیر و توصیه:</h4>
-                  <p className="text-gray-800 leading-7 text-justify text-sm md:text-base">
+                  <h4 className={`font-bold border-b pb-2 mb-2 ${result.resultType === IstikharaResultType.ERROR ? 'text-red-600' : 'text-islamic-base'}`}>
+                    {result.resultType === IstikharaResultType.ERROR ? 'علت خطا:' : 'تفسیر و توصیه:'}
+                  </h4>
+                  <p className="text-gray-800 leading-7 text-justify text-sm md:text-base whitespace-pre-wrap">
                     {result.interpretation}
                   </p>
                 </div>
@@ -191,7 +193,7 @@ const App: React.FC = () => {
                    onClick={handleReset}
                    className="w-full py-3 mt-4 border-2 border-islamic-base text-islamic-base font-bold rounded-xl hover:bg-islamic-base hover:text-white transition-colors"
                  >
-                   استخاره جدید
+                   {result.resultType === IstikharaResultType.ERROR ? 'تلاش مجدد' : 'استخاره جدید'}
                  </button>
               </div>
             </OrnamentalBorder>

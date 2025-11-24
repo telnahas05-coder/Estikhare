@@ -31,9 +31,6 @@ const istikharaSchema: Schema = {
 };
 
 export const performIstikhara = async (userIntention: string): Promise<IstikharaResponse> => {
-  // We simulate the randomness of opening the Quran by asking the AI to pick a random page/verse conceptually, 
-  // but heavily influenced by the nature of Istikhara (guidance).
-  
   const prompt = `
     You are a wise and spiritual Islamic scholar providing an 'Istikhara' (guidance seeking) service.
     
@@ -53,7 +50,7 @@ export const performIstikhara = async (userIntention: string): Promise<Istikhara
   try {
     // Check if API key is present before making the call
     if (!apiKey) {
-      throw new Error("API Key is not configured correctly.");
+      throw new Error("کلید API یافت نشد. لطفا تنظیمات برنامه را بررسی کنید.");
     }
 
     const response = await ai.models.generateContent({
@@ -62,7 +59,7 @@ export const performIstikhara = async (userIntention: string): Promise<Istikhara
       config: {
         responseMimeType: "application/json",
         responseSchema: istikharaSchema,
-        temperature: 1.2, // Higher temperature for more variety/randomness in verse selection
+        temperature: 1.1, // Slightly reduced temperature for stability
       },
     });
 
@@ -74,20 +71,24 @@ export const performIstikhara = async (userIntention: string): Promise<Istikhara
   } catch (error) {
     console.error("Istikhara Service Error Details:", error);
     
-    // Detailed error logging to help debugging in browser console
+    let errorMessage = "متاسفانه ارتباط با هوش مصنوعی برقرار نشد.";
     if (error instanceof Error) {
         console.error("Error Message:", error.message);
+        // If it's a fetch error or 400/500, it usually means key or network issues
+        if (error.message.includes("API key") || error.message.includes("400")) {
+            errorMessage += " (مشکل در شناسایی کلید API)";
+        }
     }
 
-    // Fallback in case of total failure
+    // ERROR Fallback
     return {
-      surahName: "الفتح",
-      verseNumber: 1,
-      arabicText: "إِنَّا فَتَحْنَا لَكَ فَتْحًا مُبِينًا",
-      persianTranslation: "ما تو را پیروزی بخشیدیم، چه پیروزی درخشانی!",
-      resultType: IstikharaResultType.GOOD,
+      surahName: "---",
+      verseNumber: 0,
+      arabicText: "بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
+      persianTranslation: "ارتباط با سرور برقرار نشد.",
+      resultType: IstikharaResultType.ERROR,
       briefResult: "خطا در ارتباط",
-      interpretation: "متاسفانه ارتباط با هوش مصنوعی برقرار نشد. لطفا بررسی کنید که کلید API (VITE_API_KEY) به درستی در تنظیمات Netlify وارد شده باشد.",
+      interpretation: `${errorMessage} \n\nلطفا در پنل Netlify مطمئن شوید که VITE_API_KEY را وارد کرده‌اید و سپس دکمه 'Trigger Deploy' را زده‌اید تا تغییرات اعمال شوند.`,
     };
   }
 };

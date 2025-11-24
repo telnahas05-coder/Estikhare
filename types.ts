@@ -2,6 +2,7 @@ export enum IstikharaResultType {
   GOOD = 'GOOD',
   BAD = 'BAD',
   MODERATE = 'MODERATE',
+  ERROR = 'ERROR',
 }
 
 export interface IstikharaResponse {
