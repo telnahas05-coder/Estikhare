@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { IstikharaResponse, IstikharaResultType } from "../types";
 
-const apiKey = process.env.API_KEY;
+const apiKey = import.meta.env.VITE_API_KEY;
 
 if (!apiKey) {
   console.error("API Key is missing. Please set process.env.API_KEY");
